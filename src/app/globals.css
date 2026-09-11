@@ -1,0 +1,18 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..700;1,400..700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap");
+
+@import "tailwindcss";
+:root {
+  --bg-primary: #fdfbf7;
+  --accent-gold: #c5a25d;
+  --text-dark: #1a1a1a;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-dark);
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+
+.font-serif-luxury {
+  font-family: "Playfair Display", serif;
+}
