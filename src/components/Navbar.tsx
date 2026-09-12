@@ -12,8 +12,10 @@ export default function Navbar() {
 
   const cartContext = useCart() as any;
   const cartData = cartContext?.cartItems || cartContext?.cart || [];
+
   const authContext = useAuth?.() as any;
   const user = authContext?.user || null;
+  const profile = authContext?.profile || null;
 
   const totalCartCount = Array.isArray(cartData)
     ? cartData.reduce(
@@ -46,7 +48,7 @@ export default function Navbar() {
       style={{
         width: "100%",
         backgroundColor: "#ffffff",
-        borderBottom: "1px solid #eaeeed",
+        borderBottom: "2px solid #0b3c32",
         position: "sticky",
         top: 0,
         zIndex: 50,
@@ -71,6 +73,7 @@ export default function Navbar() {
             placeholder="Tìm kiếm sản phẩm..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            className="focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/40 transition"
             style={{
               width: "100%",
               padding: "8px 36px 8px 12px",
@@ -110,6 +113,7 @@ export default function Navbar() {
               margin: 0,
               textTransform: "uppercase",
               fontFamily: "serif",
+              color: "#0b3c32",
             }}
           >
             Quoc Perfume
@@ -118,9 +122,10 @@ export default function Navbar() {
             style={{
               fontSize: "10px",
               letterSpacing: "1px",
-              color: "#6b7280",
+              color: "#c5a25d",
               textTransform: "uppercase",
               margin: "2px 0 0 0",
+              fontWeight: 600,
             }}
           >
             Magic Of Your Emotions
@@ -135,21 +140,18 @@ export default function Navbar() {
               textDecoration: "none",
               color: "#374151",
               fontSize: "13px",
-              textAlign: "right",
             }}
           >
-            <span
-              style={{
-                display: "block",
-                fontSize: "11px",
-                color: "#6b7280",
-              }}
-            >
-              Xin chào,
-            </span>
-            <span style={{ fontWeight: 600 }}>
-              {user ? "Tài khoản" : "Đăng nhập hoặc Đăng ký"}
-            </span>
+            {user ? (
+              <span>
+                <span style={{ color: "#6b7280" }}>Xin chào, </span>
+                <span style={{ fontWeight: 600, color: "#0b3c32" }}>
+                  {profile?.full_name || "..."}
+                </span>
+              </span>
+            ) : (
+              <span style={{ fontWeight: 600 }}>Đăng nhập</span>
+            )}
           </Link>
 
           <Link href="/wishlist" style={{ color: "#374151" }}>
@@ -195,7 +197,7 @@ export default function Navbar() {
       <nav
         style={{
           borderTop: "1px solid #f3f4f6",
-          backgroundColor: "#fafafa",
+          backgroundColor: "#0b3c32",
           padding: "10px 0",
           position: "relative",
         }}
@@ -219,7 +221,8 @@ export default function Navbar() {
             <li>
               <Link
                 href="/"
-                style={{ textDecoration: "none", color: "#1f2937" }}
+                className="hover:text-brand-gold transition-colors"
+                style={{ textDecoration: "none", color: "#fdfbf7" }}
               >
                 TRANG CHỦ
               </Link>
@@ -227,7 +230,8 @@ export default function Navbar() {
             <li>
               <Link
                 href="/about"
-                style={{ textDecoration: "none", color: "#1f2937" }}
+                className="hover:text-brand-gold transition-colors"
+                style={{ textDecoration: "none", color: "#fdfbf7" }}
               >
                 GIỚI THIỆU
               </Link>
@@ -248,7 +252,8 @@ export default function Navbar() {
             >
               <Link
                 href="/products"
-                style={{ textDecoration: "none", color: "#1f2937" }}
+                className="hover:text-brand-gold transition-colors"
+                style={{ textDecoration: "none", color: "#fdfbf7" }}
               >
                 THƯƠNG HIỆU
               </Link>
@@ -296,7 +301,8 @@ export default function Navbar() {
             <li>
               <Link
                 href="/products"
-                style={{ textDecoration: "none", color: "#1f2937" }}
+                className="hover:text-brand-gold transition-colors"
+                style={{ textDecoration: "none", color: "#fdfbf7" }}
               >
                 NƯỚC HOA
               </Link>
@@ -304,7 +310,8 @@ export default function Navbar() {
             <li>
               <Link
                 href="/recommend"
-                style={{ textDecoration: "none", color: "#1f2937" }}
+                className="hover:text-brand-gold transition-colors"
+                style={{ textDecoration: "none", color: "#fdfbf7" }}
               >
                 TƯ VẤN AI
               </Link>
@@ -312,7 +319,8 @@ export default function Navbar() {
             <li>
               <Link
                 href="/contact"
-                style={{ textDecoration: "none", color: "#1f2937" }}
+                className="hover:text-brand-gold transition-colors"
+                style={{ textDecoration: "none", color: "#fdfbf7" }}
               >
                 LIÊN HỆ
               </Link>
