@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { getAllProducts } from "@/src/lib/products";
+import { getProducts } from "@/src/lib/products";
 import { Product } from "@/src/lib/types";
 
 export default function HomePage() {
@@ -11,7 +11,7 @@ export default function HomePage() {
   useEffect(() => {
     async function fetchProducts() {
       try {
-        const data = await getAllProducts();
+        const data = await getProducts();
         if (data) setProducts(data);
       } catch (err) {
         console.error(err);

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { getAllProducts } from "@/src/lib/products";
+import { getProducts } from "@/src/lib/products";
 import { Product } from "@/src/lib/types";
 import ProductGrid from "@/src/components/ProductGrid";
 
@@ -18,7 +18,7 @@ export default function ProductsPage() {
     async function loadProducts() {
       try {
         setLoading(true);
-        const data = await getAllProducts();
+        const data = await getProducts();
         setProducts(data || []);
         setFilteredProducts(data || []);
       } catch (err) {

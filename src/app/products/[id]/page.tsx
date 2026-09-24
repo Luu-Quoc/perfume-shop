@@ -1,32 +1,63 @@
+import Link from "next/link";
 import { getProductById } from "@/src/lib/products";
-import { notFound } from "next/navigation";
+import ProductDetailClient from "./ProductDetailClient";
 
-export default async function ProductDetail({
-  params,
-}: {
-  params: { id: string };
-}) {
-  const product = await getProductById(params.id);
-  if (!product) notFound();
+type PageProps = {
+  params: Promise<{
+    id: string;
+  }>;
+};
 
-  return (
-    <main className="p-8 max-w-2xl mx-auto">
-      <img
-        src={product.image_url}
-        alt={product.name}
-        className="w-full rounded-lg"
-      />
-      <h1 className="text-3xl font-bold mt-4">{product.name}</h1>
-      <p className="text-gray-600 mt-2">{product.description}</p>
-      <p className="mt-2">
-        <strong>Note hương:</strong> {product.scent_notes}
-      </p>
-      <p className="mt-2">
-        <strong>Dịp dùng:</strong> {product.occasion}
-      </p>
-      <p className="text-2xl font-bold mt-4">
-        {product.price.toLocaleString()}đ
-      </p>
-    </main>
-  );
+export default async function ProductDetailPage({ params }: PageProps) {
+  const { id } = await params;
+
+  const productId = Number(id);
+
+  // ID không hợp lệ
+  if (!Number.isInteger(productId)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Sản phẩm không hợp lệ
+          </h1>
+
+          <Link
+            href="/products"
+            className="inline-block mt-4 text-emerald-800 hover:underline"
+          >
+            ← Quay lại sản phẩm
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  const product = await getProductById(productId);
+
+  // Không tìm thấy sản phẩm
+  if (!product) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900">
+            Không tìm thấy sản phẩm
+          </h1>
+
+          <p className="mt-2 text-gray-500">
+            Sản phẩm bạn đang tìm kiếm không tồn tại.
+          </p>
+
+          <Link
+            href="/products"
+            className="inline-block mt-4 text-emerald-800 hover:underline"
+          >
+            ← Quay lại danh sách sản phẩm
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  return <ProductDetailClient product={product} />;
 }
