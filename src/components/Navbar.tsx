@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Heart, ShoppingBag, User, ChevronDown } from "lucide-react";
+import { Search, Heart, ShoppingBag, ChevronDown } from "lucide-react";
 import { useCart } from "@/src/context/CartContext";
 import { useAuth } from "@/src/context/AuthContext";
 
@@ -11,9 +11,10 @@ export default function Navbar() {
   const [isMegaOpen, setIsMegaOpen] = useState(false);
 
   const cartContext = useCart() as any;
-  const cartData = cartContext?.cartItems || cartContext?.cart || [];
+  const cartData =
+    cartContext?.items || cartContext?.cartItems || cartContext?.cart || [];
 
-  const authContext = useAuth?.() as any;
+  const authContext = useAuth() as any;
   const user = authContext?.user || null;
   const profile = authContext?.profile || null;
 
@@ -54,7 +55,7 @@ export default function Navbar() {
         zIndex: 50,
       }}
     >
-      {/* Top Header - Nền trắng chữ đen */}
+      {/* Top Header */}
       <div
         style={{
           maxWidth: "1200px",
@@ -73,6 +74,13 @@ export default function Navbar() {
             placeholder="Tìm kiếm sản phẩm..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && searchQuery.trim()) {
+                window.location.href = `/products?search=${encodeURIComponent(
+                  searchQuery.trim(),
+                )}`;
+              }
+            }}
             className="focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/40 transition"
             style={{
               width: "100%",
@@ -103,6 +111,7 @@ export default function Navbar() {
             textDecoration: "none",
             color: "#111827",
             textAlign: "center",
+            flexShrink: 0,
           }}
         >
           <h1
@@ -132,21 +141,30 @@ export default function Navbar() {
           </p>
         </Link>
 
-        {/* User & Cart */}
-        <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+        {/* User, Orders, Wishlist & Cart */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            gap: "16px",
+            flex: 1,
+          }}
+        >
           <Link
             href={user ? "/account" : "/login"}
             style={{
               textDecoration: "none",
               color: "#374151",
               fontSize: "13px",
+              whiteSpace: "nowrap",
             }}
           >
             {user ? (
               <span>
                 <span style={{ color: "#6b7280" }}>Xin chào, </span>
                 <span style={{ fontWeight: 600, color: "#0b3c32" }}>
-                  {profile?.full_name || "..."}
+                  {profile?.full_name || user.email || "Tài khoản"}
                 </span>
               </span>
             ) : (
@@ -154,12 +172,32 @@ export default function Navbar() {
             )}
           </Link>
 
-          <Link href="/wishlist" style={{ color: "#374151" }}>
+          {user && (
+            <Link
+              href="/orders"
+              style={{
+                textDecoration: "none",
+                color: "#0b3c32",
+                fontSize: "13px",
+                fontWeight: 600,
+                whiteSpace: "nowrap",
+              }}
+            >
+              Đơn hàng của tôi
+            </Link>
+          )}
+
+          <Link
+            href="/wishlist"
+            aria-label="Danh sách yêu thích"
+            style={{ color: "#374151", display: "flex" }}
+          >
             <Heart style={{ width: "20px", height: "20px" }} />
           </Link>
 
           <Link
             href="/cart"
+            aria-label="Giỏ hàng"
             style={{
               color: "#374151",
               position: "relative",
@@ -216,6 +254,7 @@ export default function Navbar() {
               fontWeight: "bold",
               letterSpacing: "1px",
               textTransform: "uppercase",
+              flexWrap: "wrap",
             }}
           >
             <li>
@@ -227,6 +266,7 @@ export default function Navbar() {
                 TRANG CHỦ
               </Link>
             </li>
+
             <li>
               <Link
                 href="/about"
@@ -237,7 +277,7 @@ export default function Navbar() {
               </Link>
             </li>
 
-            {/* Menu Thương Hiệu với Dropdown Hover */}
+            {/* Menu Thương Hiệu */}
             <li
               style={{
                 position: "relative",
@@ -257,9 +297,11 @@ export default function Navbar() {
               >
                 THƯƠNG HIỆU
               </Link>
-              <ChevronDown style={{ width: "12px", height: "12px" }} />
 
-              {/* Mega Dropdown */}
+              <ChevronDown
+                style={{ width: "12px", height: "12px", color: "#fdfbf7" }}
+              />
+
               {isMegaOpen && (
                 <div
                   style={{
@@ -267,7 +309,7 @@ export default function Navbar() {
                     top: "100%",
                     left: "50%",
                     transform: "translateX(-50%)",
-                    width: "600px",
+                    width: "min(600px, 90vw)",
                     backgroundColor: "#ffffff",
                     border: "1px solid #e5e7eb",
                     boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
@@ -281,10 +323,10 @@ export default function Navbar() {
                     textTransform: "none",
                   }}
                 >
-                  {brands.map((brand, idx) => (
+                  {brands.map((brand) => (
                     <Link
-                      key={idx}
-                      href={`/products?brand=${brand}`}
+                      key={brand}
+                      href={`/products?brand=${encodeURIComponent(brand)}`}
                       style={{
                         textDecoration: "none",
                         color: "#374151",
@@ -307,6 +349,7 @@ export default function Navbar() {
                 NƯỚC HOA
               </Link>
             </li>
+
             <li>
               <Link
                 href="/recommend"
@@ -316,6 +359,7 @@ export default function Navbar() {
                 TƯ VẤN AI
               </Link>
             </li>
+
             <li>
               <Link
                 href="/contact"
