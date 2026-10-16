@@ -44,7 +44,12 @@ export default function OrderDetailPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
+    let cancelled = false;
+
     async function fetchOrderDetail() {
+      setLoading(true);
+      setError("");
+
       if (!user) {
         setLoading(false);
         return;
@@ -58,6 +63,7 @@ export default function OrderDetailPage() {
         return;
       }
 
+      // Bước 1: Lấy thông tin đơn hàng
       const { data: orderData, error: orderError } = await supabase
         .from("orders")
         .select(
@@ -69,39 +75,114 @@ export default function OrderDetailPage() {
 
       if (orderError) {
         console.error("Lỗi tải đơn hàng:", orderError);
-        setError("Không thể tải thông tin đơn hàng.");
-        setLoading(false);
+        if (!cancelled) {
+          setError("Không thể tải thông tin đơn hàng.");
+          setLoading(false);
+        }
         return;
       }
 
       if (!orderData) {
-        setError(
-          "Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn này.",
-        );
-        setLoading(false);
+        if (!cancelled) {
+          setError(
+            "Không tìm thấy đơn hàng hoặc bạn không có quyền xem đơn này.",
+          );
+          setLoading(false);
+        }
         return;
       }
 
+      // Bước 2: Lấy sản phẩm thuộc đơn hàng
       const { data: itemData, error: itemError } = await supabase
         .from("order_items")
-        .select(
-          "id, order_id, product_id, quantity, price, products(name, image_url, brand, volume)",
-        )
+        .select("id, order_id, product_id, quantity, price")
         .eq("order_id", id);
 
+      // Log để kiểm tra trong F12 > Console
+      console.log("ORDER ITEMS:", itemData);
+      console.log("ORDER ITEMS ERROR:", itemError);
+
       if (itemError) {
-        console.error("Lỗi tải sản phẩm trong đơn hàng:", itemError);
-        setError("Không thể tải danh sách sản phẩm của đơn hàng.");
-        setLoading(false);
+        console.error("Lỗi lấy order_items:", itemError);
+        if (!cancelled) {
+          setError("Không thể tải danh sách sản phẩm của đơn hàng.");
+          setLoading(false);
+        }
         return;
       }
 
-      setOrder(orderData as Order);
-      setItems((itemData ?? []) as unknown as OrderItem[]);
-      setLoading(false);
+      const orderItems = itemData ?? [];
+
+      // Bước 3: Lấy thông tin chi tiết từ bảng products
+      const productIds = [
+        ...new Set(orderItems.map((item) => Number(item.product_id))),
+      ];
+
+      let productMap = new Map<
+        number,
+        {
+          name: string;
+          image_url: string | null;
+          brand: string | null;
+          volume: string | null;
+        }
+      >();
+
+      if (productIds.length > 0) {
+        const { data: productData, error: productError } = await supabase
+          .from("products")
+          .select("id, name, image_url, brand, volume")
+          .in("id", productIds);
+
+        console.log("ORDER PRODUCTS:", productData);
+        console.log("ORDER PRODUCTS ERROR:", productError);
+
+        if (productError) {
+          console.error("Lỗi lấy products:", productError);
+          if (!cancelled) {
+            setError("Không thể tải thông tin sản phẩm.");
+            setLoading(false);
+          }
+          return;
+        }
+
+        productMap = new Map(
+          (productData ?? []).map((product) => [
+            Number(product.id),
+            {
+              name: product.name,
+              image_url: product.image_url,
+              brand: product.brand,
+              volume: product.volume == null ? null : `${product.volume} ml`,
+            },
+          ]),
+        );
+      }
+
+      // Bước 4: Ghép sản phẩm với từng dòng đơn hàng
+      const formattedItems: OrderItem[] = orderItems.map((item) => ({
+        id: Number(item.id),
+        order_id: Number(item.order_id),
+        product_id: Number(item.product_id),
+        quantity: Number(item.quantity),
+        price: Number(item.price),
+        products: productMap.get(Number(item.product_id)) ?? null,
+      }));
+
+      console.log("SẢN PHẨM HIỂN THỊ:", formattedItems);
+
+      if (!cancelled) {
+        setOrder(orderData as Order);
+        setItems(formattedItems);
+        setLoading(false);
+      }
     }
 
     fetchOrderDetail();
+
+    return () => {
+      cancelled = true;
+    };
   }, [user, orderId]);
 
   if (loading) {
@@ -162,6 +243,7 @@ export default function OrderDetailPage() {
         </span>
       </div>
 
+      {/* Thông tin giao hàng */}
       <section className="mb-6 rounded-xl border bg-white p-5">
         <h2 className="mb-4 text-lg font-bold">Thông tin giao hàng</h2>
         <p className="mb-2">
@@ -178,13 +260,12 @@ export default function OrderDetailPage() {
         </p>
       </section>
 
+      {/* Sản phẩm đã đặt */}
       <section className="mb-6 rounded-xl border bg-white p-5">
         <h2 className="mb-4 text-lg font-bold">Sản phẩm đã đặt</h2>
 
         {items.length === 0 ? (
-          <p className="text-gray-500">
-            Đơn hàng chưa có sản phẩm hoặc không tải được sản phẩm.
-          </p>
+          <p className="text-gray-500">Đơn hàng này chưa có sản phẩm.</p>
         ) : (
           <div className="space-y-4">
             {items.map((item) => (
@@ -195,12 +276,12 @@ export default function OrderDetailPage() {
                 {item.products?.image_url ? (
                   <img
                     src={item.products.image_url}
-                    alt={item.products.name || "Nước hoa"}
-                    className="h-20 w-20 rounded-lg border object-cover"
+                    alt={item.products.name}
+                    className="h-24 w-24 rounded-lg border bg-white object-contain p-1"
                   />
                 ) : (
-                  <div className="flex h-20 w-20 items-center justify-center rounded-lg bg-gray-100 text-xs text-gray-500">
-                    Không có ảnh
+                  <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-gray-100 text-center text-xs text-gray-500">
+                    Chưa có ảnh
                   </div>
                 )}
 
@@ -208,31 +289,41 @@ export default function OrderDetailPage() {
                   <h3 className="font-semibold">
                     {item.products?.name || `Sản phẩm #${item.product_id}`}
                   </h3>
+
                   {item.products?.brand && (
                     <p className="mt-1 text-sm text-gray-500">
                       Thương hiệu: {item.products.brand}
                     </p>
                   )}
+
                   {item.products?.volume && (
                     <p className="mt-1 text-sm text-gray-500">
                       Dung tích: {item.products.volume}
                     </p>
                   )}
+
+                  <p className="mt-1 text-sm text-gray-600">
+                    Đơn giá: {item.price.toLocaleString("vi-VN")} ₫
+                  </p>
+
                   <p className="mt-1 text-sm text-gray-600">
                     Số lượng: {item.quantity}
                   </p>
                 </div>
 
-                <p className="font-semibold text-emerald-900">
-                  {(Number(item.price) * item.quantity).toLocaleString("vi-VN")}{" "}
-                  ₫
-                </p>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500">Thành tiền</p>
+                  <p className="font-bold text-emerald-900">
+                    {(item.price * item.quantity).toLocaleString("vi-VN")} ₫
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         )}
       </section>
 
+      {/* Thanh toán */}
       <section className="rounded-xl border bg-white p-5">
         <h2 className="mb-4 text-lg font-bold">Thanh toán</h2>
 
