@@ -1,33 +1,62 @@
 "use client";
 
-import { createContext, useContext, useState, ReactNode } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+} from "react";
 
 import { CartItem, Product } from "../lib/types";
 
 type CartContextType = {
   items: CartItem[];
-
-  // Thêm sản phẩm vào giỏ
   addToCart: (product: Product) => void;
-
-  // Thay đổi số lượng
   updateQuantity: (productId: number, quantity: number) => void;
-
-  // Xóa sản phẩm
   removeFromCart: (productId: number) => void;
-
-  // Xóa toàn bộ giỏ hàng
   clearCart: () => void;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+const CART_STORAGE_KEY = "quoc-perfume-cart";
+
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // ==========================================
-  // THÊM SẢN PHẨM VÀO GIỎ
-  // ==========================================
+  // 1. Đọc giỏ hàng đã lưu khi component được khởi tạo.
+  useEffect(() => {
+    try {
+      const savedCart = localStorage.getItem(CART_STORAGE_KEY);
+
+      if (savedCart) {
+        const parsedCart: CartItem[] = JSON.parse(savedCart);
+
+        if (Array.isArray(parsedCart)) {
+          setItems(parsedCart);
+        }
+      }
+    } catch (error) {
+      console.error("Không thể đọc giỏ hàng:", error);
+    } finally {
+      setIsLoaded(true);
+    }
+  }, []);
+
+  // 2. Lưu giỏ hàng sau khi đã đọc dữ liệu ban đầu.
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(items));
+    } catch (error) {
+      console.error("Không thể lưu giỏ hàng:", error);
+    }
+  }, [items, isLoaded]);
+
+  // 3. Thêm sản phẩm vào giỏ.
   function addToCart(product: Product) {
     if (product.stock <= 0) {
       alert("Sản phẩm đã hết hàng");
@@ -45,43 +74,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
         return prev.map((item) =>
           item.product.id === product.id
-            ? {
-                ...item,
-                quantity: item.quantity + 1,
-              }
+            ? { ...item, quantity: item.quantity + 1 }
             : item,
         );
       }
 
-      return [
-        ...prev,
-        {
-          product,
-          quantity: 1,
-        },
-      ];
+      return [...prev, { product, quantity: 1 }];
     });
 
     alert(`Đã thêm "${product.name}" vào giỏ hàng!`);
   }
 
-  // ==========================================
-  // THAY ĐỔI SỐ LƯỢNG
-  // ==========================================
+  // 4. Thay đổi số lượng sản phẩm.
   function updateQuantity(productId: number, quantity: number) {
     setItems((prev) => {
-      // Nếu giảm xuống 0 → xóa sản phẩm
       if (quantity <= 0) {
         return prev.filter((item) => item.product.id !== productId);
       }
 
       return prev.map((item) => {
-        // Không phải sản phẩm cần sửa
         if (item.product.id !== productId) {
           return item;
         }
 
-        // Không cho vượt tồn kho
         if (quantity > item.product.stock) {
           alert(`Chỉ còn ${item.product.stock} sản phẩm trong kho`);
 
@@ -91,25 +106,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
           };
         }
 
-        // Cập nhật số lượng
-        return {
-          ...item,
-          quantity,
-        };
+        return { ...item, quantity };
       });
     });
   }
 
-  // ==========================================
-  // XÓA 1 SẢN PHẨM
-  // ==========================================
+  // 5. Xóa một sản phẩm.
   function removeFromCart(productId: number) {
     setItems((prev) => prev.filter((item) => item.product.id !== productId));
   }
 
-  // ==========================================
-  // XÓA TOÀN BỘ GIỎ HÀNG
-  // ==========================================
+  // 6. Xóa toàn bộ giỏ hàng sau khi đặt hàng thành công.
   function clearCart() {
     setItems([]);
   }
@@ -129,9 +136,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
 }
 
-// ==========================================
-// CUSTOM HOOK
-// ==========================================
+// Custom hook.
 export function useCart() {
   const context = useContext(CartContext);
 

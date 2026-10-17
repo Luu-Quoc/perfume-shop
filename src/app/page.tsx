@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Hero from "@/src/components/Hero";
 import { getProducts } from "@/src/lib/products";
 import { Product } from "@/src/lib/types";
 
@@ -14,38 +15,25 @@ export default function HomePage() {
         const data = await getProducts();
         if (data) setProducts(data);
       } catch (err) {
-        console.error(err);
+        console.error("Lỗi tải sản phẩm:", err);
       }
     }
+
     fetchProducts();
   }, []);
 
   return (
     <div style={{ width: "100%", backgroundColor: "#ffffff" }}>
-      {/* Banner Quảng Cáo */}
-      <section
-        style={{ maxWidth: "1200px", margin: "24px auto", padding: "0 16px" }}
-      >
-        <div
-          style={{
-            width: "100%",
-            height: "360px",
-            borderRadius: "12px",
-            overflow: "hidden",
-            position: "relative",
-          }}
-        >
-          <img
-            src="https://images.unsplash.com/photo-1592945403244-b3fbafd7f539?auto=format&fit=crop&q=80&w=1600"
-            alt="Perfume Banner"
-            style={{ width: "100%", height: "100%", objectFit: "cover" }}
-          />
-        </div>
-      </section>
+      {/* Banner tự động chuyển ảnh */}
+      <Hero />
 
-      {/* Danh sách sản phẩm từ DB */}
+      {/* Danh sách sản phẩm nổi bật từ Supabase */}
       <section
-        style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px 16px" }}
+        style={{
+          maxWidth: "1200px",
+          margin: "0 auto",
+          padding: "32px 16px",
+        }}
       >
         <div
           style={{
@@ -68,6 +56,7 @@ export default function HomePage() {
           >
             Sản phẩm nổi bật
           </h2>
+
           <Link
             href="/products"
             style={{
@@ -114,6 +103,7 @@ export default function HomePage() {
                       marginBottom: "12px",
                     }}
                   />
+
                   <h3
                     style={{
                       fontSize: "14px",
@@ -126,6 +116,7 @@ export default function HomePage() {
                   >
                     {product.name}
                   </h3>
+
                   <p
                     style={{
                       fontSize: "14px",
