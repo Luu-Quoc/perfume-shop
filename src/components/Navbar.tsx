@@ -2,13 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, Heart, ShoppingBag, ChevronDown } from "lucide-react";
+import { Search, Heart, ShoppingBag, ChevronDown, Menu, X } from "lucide-react";
 import { useCart } from "@/src/context/CartContext";
 import { useAuth } from "@/src/context/AuthContext";
 
 export default function Navbar() {
   const [searchQuery, setSearchQuery] = useState("");
   const [isMegaOpen, setIsMegaOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const cartContext = useCart() as any;
   const cartData =
@@ -44,294 +45,160 @@ export default function Navbar() {
     "TOM FORD",
   ];
 
-  return (
-    <header
-      style={{
-        width: "100%",
-        backgroundColor: "#ffffff",
-        borderBottom: "2px solid #0b3c32",
-        position: "sticky",
-        top: 0,
-        zIndex: 50,
-      }}
-    >
-      {/* Top Header */}
-      <div
-        style={{
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "12px 16px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "16px",
-        }}
-      >
-        {/* Tìm kiếm */}
-        <div style={{ flex: 1, maxWidth: "320px", position: "relative" }}>
-          <input
-            type="text"
-            placeholder="Tìm kiếm sản phẩm..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && searchQuery.trim()) {
-                window.location.href = `/products?search=${encodeURIComponent(
-                  searchQuery.trim(),
-                )}`;
-              }
-            }}
-            className="focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/40 transition"
-            style={{
-              width: "100%",
-              padding: "8px 36px 8px 12px",
-              fontSize: "13px",
-              borderRadius: "6px",
-              border: "1px solid #d1d5db",
-              outline: "none",
-              boxSizing: "border-box",
-            }}
-          />
-          <Search
-            style={{
-              width: "16px",
-              height: "16px",
-              position: "absolute",
-              right: "10px",
-              top: "10px",
-              color: "#6b7280",
-            }}
-          />
-        </div>
+  const navLinkClass =
+    "shrink-0 whitespace-nowrap text-xs font-bold tracking-wider text-[#fdfbf7] hover:text-[#c5a25d] transition-colors";
 
+  function searchProducts() {
+    if (searchQuery.trim()) {
+      window.location.href = `/products?search=${encodeURIComponent(searchQuery.trim())}`;
+    }
+  }
+
+  return (
+    <header className="sticky top-0 z-50 w-full max-w-full border-b-2 border-[#0b3c32] bg-white">
+      {/* Header chính */}
+      <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[1fr_auto] items-center gap-x-3 gap-y-3 px-3 py-3 sm:px-4 lg:flex lg:justify-between lg:gap-4">
         {/* Logo */}
         <Link
           href="/"
-          style={{
-            textDecoration: "none",
-            color: "#111827",
-            textAlign: "center",
-            flexShrink: 0,
-          }}
+          className="col-start-1 row-start-1 justify-self-start text-center no-underline lg:order-2 lg:mx-auto lg:justify-self-auto"
         >
-          <h1
-            style={{
-              fontSize: "22px",
-              fontWeight: "bold",
-              letterSpacing: "2px",
-              margin: 0,
-              textTransform: "uppercase",
-              fontFamily: "serif",
-              color: "#0b3c32",
-            }}
-          >
+          <h1 className="m-0 whitespace-nowrap font-serif-luxury text-lg font-bold uppercase tracking-wider text-[#0b3c32] sm:text-xl lg:text-[22px] lg:tracking-[2px]">
             Quoc Perfume
           </h1>
-          <p
-            style={{
-              fontSize: "10px",
-              letterSpacing: "1px",
-              color: "#c5a25d",
-              textTransform: "uppercase",
-              margin: "2px 0 0 0",
-              fontWeight: 600,
-            }}
-          >
+          <p className="m-0 mt-0.5 text-[8px] font-semibold uppercase tracking-wider text-[#c5a25d] sm:text-[10px]">
             Magic Of Your Emotions
           </p>
         </Link>
 
-        {/* User, Orders, Wishlist & Cart */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "flex-end",
-            gap: "16px",
-            flex: 1,
-          }}
-        >
+        {/* Nút bên phải */}
+        <div className="col-start-2 row-start-1 flex items-center justify-self-end gap-3 sm:gap-4 lg:order-3">
           <Link
             href={user ? "/account" : "/login"}
-            style={{
-              textDecoration: "none",
-              color: "#374151",
-              fontSize: "13px",
-              whiteSpace: "nowrap",
-            }}
+            aria-label={user ? "Tài khoản của tôi" : "Đăng nhập"}
+            title={
+              user
+                ? profile?.full_name || user.email || "Tài khoản"
+                : "Đăng nhập"
+            }
+            className="hidden max-w-40 truncate text-xs font-semibold text-[#374151] no-underline sm:block"
           >
-            {user ? (
-              <span>
-                <span style={{ color: "#6b7280" }}>Xin chào, </span>
-                <span style={{ fontWeight: 600, color: "#0b3c32" }}>
-                  {profile?.full_name || user.email || "Tài khoản"}
-                </span>
-              </span>
-            ) : (
-              <span style={{ fontWeight: 600 }}>Đăng nhập</span>
-            )}
+            {user
+              ? profile?.full_name || user.email || "Tài khoản"
+              : "Đăng nhập"}
           </Link>
 
           {user && (
             <Link
               href="/orders"
-              style={{
-                textDecoration: "none",
-                color: "#0b3c32",
-                fontSize: "13px",
-                fontWeight: 600,
-                whiteSpace: "nowrap",
-              }}
+              aria-label="Đơn hàng của tôi"
+              title="Đơn hàng của tôi"
+              className="hidden text-xs font-semibold text-[#0b3c32] no-underline xl:block"
             >
-              Đơn hàng của tôi
+              Đơn hàng
             </Link>
           )}
 
           <Link
             href="/wishlist"
             aria-label="Danh sách yêu thích"
-            style={{ color: "#374151", display: "flex" }}
+            title="Yêu thích"
+            className="flex shrink-0 text-[#374151]"
           >
-            <Heart style={{ width: "20px", height: "20px" }} />
+            <Heart size={19} />
           </Link>
 
           <Link
             href="/cart"
             aria-label="Giỏ hàng"
-            style={{
-              color: "#374151",
-              position: "relative",
-              display: "flex",
-              alignItems: "center",
-            }}
+            title="Giỏ hàng"
+            className="relative flex shrink-0 text-[#374151]"
           >
-            <ShoppingBag style={{ width: "20px", height: "20px" }} />
+            <ShoppingBag size={19} />
             {totalCartCount > 0 && (
-              <span
-                style={{
-                  position: "absolute",
-                  top: "-6px",
-                  right: "-8px",
-                  backgroundColor: "#dc2626",
-                  color: "#ffffff",
-                  fontSize: "10px",
-                  fontWeight: "bold",
-                  borderRadius: "50%",
-                  width: "16px",
-                  height: "16px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
+              <span className="absolute -right-2 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
                 {totalCartCount}
               </span>
             )}
           </Link>
+
+          {/* Nút menu chỉ hiện trên điện thoại */}
+          <button
+            type="button"
+            aria-label={isMobileMenuOpen ? "Đóng menu" : "Mở menu"}
+            aria-expanded={isMobileMenuOpen}
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="flex shrink-0 items-center justify-center text-[#0b3c32] sm:hidden"
+          >
+            {isMobileMenuOpen ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
+
+        {/* Tìm kiếm: xuống hàng trên điện thoại */}
+        <div className="relative col-span-2 row-start-2 w-full min-w-0 lg:order-1 lg:col-span-1 lg:row-auto lg:max-w-[320px] lg:flex-1">
+          <input
+            type="search"
+            placeholder="Tìm kiếm sản phẩm..."
+            aria-label="Tìm kiếm sản phẩm"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") searchProducts();
+            }}
+            className="w-full min-w-0 rounded-md border border-gray-300 px-3 py-2 pr-9 text-[13px] outline-none transition focus:border-[#c5a25d] focus:ring-1 focus:ring-[#c5a25d]/40"
+          />
+          <button
+            type="button"
+            onClick={searchProducts}
+            aria-label="Tìm kiếm"
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500"
+          >
+            <Search size={16} />
+          </button>
         </div>
       </div>
 
-      {/* Navigation Bar & Mega Dropdown */}
-      <nav
-        style={{
-          borderTop: "1px solid #f3f4f6",
-          backgroundColor: "#0b3c32",
-          padding: "10px 0",
-          position: "relative",
-        }}
-      >
-        <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <ul
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "32px",
-              listStyle: "none",
-              margin: 0,
-              padding: 0,
-              fontSize: "12px",
-              fontWeight: "bold",
-              letterSpacing: "1px",
-              textTransform: "uppercase",
-              flexWrap: "wrap",
-            }}
-          >
-            <li>
-              <Link
-                href="/"
-                className="hover:text-brand-gold transition-colors"
-                style={{ textDecoration: "none", color: "#fdfbf7" }}
-              >
+      {/* Menu điều hướng */}
+      <nav className="relative border-t border-gray-100 bg-[#0b3c32]">
+        <div className="mx-auto max-w-[1200px]">
+          <ul className="flex items-center justify-start gap-6 overflow-x-auto overscroll-x-contain px-4 py-3 sm:justify-center sm:gap-7 lg:gap-8">
+            <li className="shrink-0">
+              <Link href="/" className={navLinkClass}>
                 TRANG CHỦ
               </Link>
             </li>
-
-            <li>
-              <Link
-                href="/about"
-                className="hover:text-brand-gold transition-colors"
-                style={{ textDecoration: "none", color: "#fdfbf7" }}
-              >
+            <li className="shrink-0">
+              <Link href="/about" className={navLinkClass}>
                 GIỚI THIỆU
               </Link>
             </li>
 
-            {/* Menu Thương Hiệu */}
             <li
-              style={{
-                position: "relative",
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                padding: "4px 0",
-              }}
+              className="relative flex shrink-0 items-center gap-1"
               onMouseEnter={() => setIsMegaOpen(true)}
               onMouseLeave={() => setIsMegaOpen(false)}
             >
-              <Link
-                href="/products"
-                className="hover:text-brand-gold transition-colors"
-                style={{ textDecoration: "none", color: "#fdfbf7" }}
-              >
+              <Link href="/products" className={navLinkClass}>
                 THƯƠNG HIỆU
               </Link>
-
-              <ChevronDown
-                style={{ width: "12px", height: "12px", color: "#fdfbf7" }}
-              />
+              <button
+                type="button"
+                aria-label="Mở danh sách thương hiệu"
+                aria-expanded={isMegaOpen}
+                onClick={() => setIsMegaOpen(!isMegaOpen)}
+                className="text-white"
+              >
+                <ChevronDown size={13} />
+              </button>
 
               {isMegaOpen && (
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "100%",
-                    left: "50%",
-                    transform: "translateX(-50%)",
-                    width: "min(600px, 90vw)",
-                    backgroundColor: "#ffffff",
-                    border: "1px solid #e5e7eb",
-                    boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.1)",
-                    borderRadius: "0 0 8px 8px",
-                    padding: "20px",
-                    display: "grid",
-                    gridTemplateColumns: "repeat(3, 1fr)",
-                    gap: "12px",
-                    zIndex: 100,
-                    fontWeight: "normal",
-                    textTransform: "none",
-                  }}
-                >
+                <div className="absolute left-1/2 top-full z-[60] grid w-[min(600px,90vw)] -translate-x-1/2 grid-cols-2 gap-3 rounded-b-lg border border-gray-200 bg-white p-4 font-normal normal-case shadow-lg sm:grid-cols-3 sm:p-5">
                   {brands.map((brand) => (
                     <Link
                       key={brand}
                       href={`/products?brand=${encodeURIComponent(brand)}`}
-                      style={{
-                        textDecoration: "none",
-                        color: "#374151",
-                        fontSize: "12px",
-                      }}
+                      onClick={() => setIsMegaOpen(false)}
+                      className="break-words text-xs text-gray-700 no-underline hover:text-[#c5a25d]"
                     >
                       {brand}
                     </Link>
@@ -340,38 +207,59 @@ export default function Navbar() {
               )}
             </li>
 
-            <li>
-              <Link
-                href="/products"
-                className="hover:text-brand-gold transition-colors"
-                style={{ textDecoration: "none", color: "#fdfbf7" }}
-              >
+            <li className="shrink-0">
+              <Link href="/products" className={navLinkClass}>
                 NƯỚC HOA
               </Link>
             </li>
-
-            <li>
-              <Link
-                href="/recommend"
-                className="hover:text-brand-gold transition-colors"
-                style={{ textDecoration: "none", color: "#fdfbf7" }}
-              >
+            <li className="shrink-0">
+              <Link href="/recommend" className={navLinkClass}>
                 TƯ VẤN AI
               </Link>
             </li>
-
-            <li>
-              <Link
-                href="/contact"
-                className="hover:text-brand-gold transition-colors"
-                style={{ textDecoration: "none", color: "#fdfbf7" }}
-              >
+            <li className="shrink-0">
+              <Link href="/contact" className={navLinkClass}>
                 LIÊN HỆ
               </Link>
             </li>
           </ul>
         </div>
       </nav>
+
+      {/* Menu phụ trên điện thoại */}
+      {isMobileMenuOpen && (
+        <div className="border-t border-gray-200 bg-white px-4 py-3 shadow-md sm:hidden">
+          <div className="flex flex-col gap-4">
+            <Link
+              href={user ? "/account" : "/login"}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-sm font-semibold text-[#0b3c32] no-underline"
+            >
+              {user
+                ? profile?.full_name || user.email || "Tài khoản"
+                : "Đăng nhập"}
+            </Link>
+
+            {user && (
+              <Link
+                href="/orders"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="text-sm text-gray-700 no-underline"
+              >
+                Đơn hàng của tôi
+              </Link>
+            )}
+
+            <Link
+              href="/wishlist"
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="text-sm text-gray-700 no-underline"
+            >
+              Danh sách yêu thích
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

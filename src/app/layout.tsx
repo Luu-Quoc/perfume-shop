@@ -11,11 +11,11 @@ export default function RootLayout({
 }) {
   return (
     <html lang="vi">
-      <body className="bg-white text-gray-900 antialiased min-h-screen flex flex-col justify-between">
+      <body className="min-h-screen flex flex-col bg-white text-gray-900 antialiased">
         <AuthProvider>
           <CartProvider>
             <Navbar />
-            <main className="flex-grow">{children}</main>
+            <main className="flex-1 min-w-0 w-full">{children}</main>
             <Footer />
           </CartProvider>
         </AuthProvider>
