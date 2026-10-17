@@ -1,9 +1,9 @@
-import { getAllProducts } from "@/src/lib/products";
+import { getProducts } from "@/src/lib/products";
 import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
   const { scentType, occasion, budget } = await request.json();
-  const products = await getAllProducts();
+  const products = await getProducts();
 
   const prompt = `
 Bạn là chuyên gia tư vấn nước hoa. Dựa trên catalog sản phẩm sau (JSON):
