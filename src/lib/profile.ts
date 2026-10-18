@@ -6,6 +6,7 @@ export type Profile = {
   username: string;
   phone: string;
   email: string;
+  role: string;
 };
 
 export async function getProfile(userId: string): Promise<Profile | null> {

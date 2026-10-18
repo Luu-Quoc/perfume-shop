@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff } from "lucide-react";
-import { loginWithUsername } from "@/src/lib/auth";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 import SocialLoginButtons from "@/src/components/SocialLoginButtons";
+import { supabase } from "@/src/lib/supabase";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -14,78 +14,151 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setLoading(true);
+
     try {
-      await loginWithUsername(username, password);
-      router.push("/");
-    } catch (err: any) {
-      setError(err.message);
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Đăng nhập thất bại.");
+      }
+
+      if (!result.session?.access_token || !result.session?.refresh_token) {
+        throw new Error("Phiên đăng nhập không hợp lệ.");
+      }
+
+      const { error: sessionError } = await supabase.auth.setSession({
+        access_token: result.session.access_token,
+        refresh_token: result.session.refresh_token,
+      });
+
+      if (sessionError) {
+        throw new Error(sessionError.message);
+      }
+
+      router.replace("/");
+      router.refresh();
+    } catch (err: unknown) {
+      setError(
+        err instanceof Error ? err.message : "Đã xảy ra lỗi khi đăng nhập.",
+      );
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="max-w-md mx-auto px-4 py-20">
-      <h1 className="font-serif-luxury text-3xl font-bold text-brand-emerald mb-6 text-center">
-        Đăng nhập
-      </h1>
-
-      {error && (
-        <p className="bg-red-50 text-red-600 text-sm p-3 rounded-lg mb-4">
-          {error}
+    <main className="min-h-[70vh] bg-[#f8f7f3] px-4 py-16 sm:py-20">
+      <div className="mx-auto max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-sm sm:p-8">
+        <p className="mb-2 text-center text-xs font-semibold uppercase tracking-[0.25em] text-amber-700">
+          QUOC PERFUME
         </p>
-      )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <input
-          placeholder="Tài khoản"
-          required
-          value={username}
-          onChange={(e) => setUsername(e.target.value)}
-          className="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/40 outline-none"
-        />
+        <h1 className="mb-2 text-center font-serif-luxury text-3xl font-bold text-emerald-950">
+          Đăng nhập
+        </h1>
 
-        <div className="relative">
-          <input
-            type={showPassword ? "text" : "password"}
-            placeholder="Mật khẩu"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full border border-gray-300 rounded-lg px-4 py-2.5 pr-10 text-sm focus:border-brand-gold focus:ring-1 focus:ring-brand-gold/40 outline-none"
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400"
+        <p className="mb-7 text-center text-sm text-gray-500">
+          Đăng nhập để tiếp tục mua sắm.
+        </p>
+
+        {error && (
+          <p
+            role="alert"
+            className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-600"
           >
-            {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            {error}
+          </p>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label
+              htmlFor="username"
+              className="mb-1.5 block text-sm font-medium text-gray-700"
+            >
+              Tên tài khoản
+            </label>
+
+            <input
+              id="username"
+              name="username"
+              autoComplete="username"
+              placeholder="Nhập tên tài khoản"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm outline-none transition focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+            />
+          </div>
+
+          <div>
+            <label
+              htmlFor="password"
+              className="mb-1.5 block text-sm font-medium text-gray-700"
+            >
+              Mật khẩu
+            </label>
+
+            <div className="relative">
+              <input
+                id="password"
+                name="password"
+                autoComplete="current-password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Nhập mật khẩu"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-4 py-3 pr-12 text-sm outline-none transition focus:border-amber-600 focus:ring-2 focus:ring-amber-600/20"
+              />
+
+              <button
+                type="button"
+                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 !border-0 !bg-transparent !p-1 !text-gray-500 shadow-none hover:!bg-transparent hover:!text-emerald-950"
+              >
+                {showPassword ? <EyeOff size={19} /> : <Eye size={19} />}
+              </button>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="!flex !w-full !items-center !justify-center !gap-2 !rounded-lg !border !border-emerald-900 !bg-emerald-900 !px-4 !py-3 !font-semibold !text-white !shadow-sm transition hover:!border-emerald-800 hover:!bg-emerald-800 disabled:!cursor-not-allowed disabled:!opacity-60"
+          >
+            <LogIn size={18} />
+            {loading ? "Đang đăng nhập..." : "Đăng nhập"}
           </button>
+        </form>
+
+        <div className="my-5">
+          <SocialLoginButtons />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full bg-brand-emerald text-white py-2.5 rounded-lg font-medium hover:bg-brand-emerald-dark transition-colors disabled:opacity-60"
-        >
-          {loading ? "Đang đăng nhập..." : "Đăng nhập"}
-        </button>
-      </form>
-      <SocialLoginButtons />
-
-      <p className="text-center text-sm text-gray-500 mt-6">
-        Chưa có tài khoản?{" "}
-        <a
-          href="/register"
-          className="text-brand-gold font-medium hover:underline"
-        >
-          Đăng ký ngay
-        </a>
-      </p>
+        <p className="text-center text-sm text-gray-500">
+          Chưa có tài khoản?{" "}
+          <a
+            href="/register"
+            className="font-semibold text-amber-700 hover:underline"
+          >
+            Đăng ký ngay
+          </a>
+        </p>
+      </div>
     </main>
   );
 }
